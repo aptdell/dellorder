@@ -1,0 +1,20 @@
+{
+  "name": "dellTracking",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.0",
+    "axios-cookiejar-support": "^1.0.1",
+    "google-spreadsheet": "^3.0.14",
+    "p-limit": "^3.1.0",
+    "random-useragent": "^0.5.0",
+    "tough-cookie": "^4.0.0"
+  }
+}
