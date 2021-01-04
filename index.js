@@ -25,43 +25,49 @@ const session = axios.create({
 });
 
 const fuck = async (pdid) => {
-  const {
-    data: { RedirectUrl },
-  } = await session.post(
-    "https://www.dell.com/support/order-status/en-us/Home/SearchBy",
-    { SearchValue: pdid, SearchBy: "dpid" }
-  );
-
-  const { data } = await session.post(
-    "https://www.dell.com/support/order-status/en-us/MyOrders/GetContentAsync?" +
-      RedirectUrl.split("?")[1]
-  );
-  const { RedirectUrl: orderStatusUrl } = data;
-  if (orderStatusUrl) {
+  try {
     const {
-      data: { OrderPackageDetail },
+      data: { RedirectUrl },
     } = await session.post(
-      "https://www.dell.com/support/order-status/en-us/orderdetails/getorderdetail?" +
-        orderStatusUrl.split("?")[1]
+      "https://www.dell.com/support/order-status/en-us/Home/SearchBy",
+      { SearchValue: pdid, SearchBy: "dpid" }
     );
-    const result = OrderPackageDetail.Packages.map((Package) => {
-      fs.appendFileSync("./12.txt", `${pdid}, ${Package.TrackingId}\n`);
-      return [pdid, Package.TrackingId];
-    });
-    console.log(1, result);
+
+    const { data } = await session.post(
+      "https://www.dell.com/support/order-status/en-us/MyOrders/GetContentAsync?" +
+        RedirectUrl.split("?")[1]
+    );
+    const { RedirectUrl: orderStatusUrl } = data;
+    if (orderStatusUrl) {
+      const {
+        data: { OrderPackageDetail },
+      } = await session.post(
+        "https://www.dell.com/support/order-status/en-us/orderdetails/getorderdetail?" +
+          orderStatusUrl.split("?")[1]
+      );
+      const result = OrderPackageDetail.Packages.map((Package) => {
+        fs.appendFileSync("./12.txt", `${pdid}, ${Package.TrackingId}\n`);
+        return [pdid, Package.TrackingId];
+      });
+      console.log(1, result);
+      return result;
+    }
+    const orders = data.OrderCollectionData.OrderCollection.CardList;
+    const result = orders
+      .map((order) => {
+        if (!order.TrackOrderLink) return;
+        const { tracknumbers } = qs.parse(order.TrackOrderLink.Url);
+        fs.appendFileSync("./12.txt", `${pdid}, ${tracknumbers}\n`);
+        return [pdid, tracknumbers];
+      })
+      .filter((tracknumbers) => tracknumbers);
+    console.log(2, result);
     return result;
+  } catch (error) {
+    console.log("========error==========");
+    console.log(error);
+    console.log("========error==========");
   }
-  const orders = data.OrderCollectionData.OrderCollection.CardList;
-  const result = orders
-    .map((order) => {
-      if (!order.TrackOrderLink) return;
-      const { tracknumbers } = qs.parse(order.TrackOrderLink.Url);
-      fs.appendFileSync("./12.txt", `${pdid}, ${tracknumbers}\n`);
-      return [pdid, tracknumbers];
-    })
-    .filter((tracknumbers) => tracknumbers);
-  console.log(2, result);
-  return result;
 };
 
 const run = async () => {
